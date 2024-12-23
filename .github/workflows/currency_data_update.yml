@@ -27,6 +27,7 @@ jobs:
           git commit -m "update currencies list"
       - name: "Create PR if currencies has been changed"
         if: ${{ steps.changed.outputs.CHANGED }}
+        run: |
           gh pr create -B main -H "currency-update-$(date --iso-8601=date)-${{ github.run_number }}-${{ github.run_attempt }}" --title 'Merge "currency-update-$(date --iso-8601=date)-${{ github.run_number }}-${{ github.run_attempt }}" into main' --body 'Created by Github action'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
