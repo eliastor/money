@@ -3,9 +3,6 @@ on:
 name: money
 jobs:
   test:
-    strategy:
-      matrix:
-        go-version: [oldstable, stable]
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
