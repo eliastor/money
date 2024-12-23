@@ -33,7 +33,7 @@ jobs:
           mv currency_data.new.csv scripts/currency/currency_data.csv
           git add -u
           git commit -m "update currencies list"
-          git push
+          git push --set-upstream origin "${BRANCH}"
       - name: "Create PR if currencies has been changed"
         if: ${{ steps.changed.outputs.CHANGED }}
         run: |
