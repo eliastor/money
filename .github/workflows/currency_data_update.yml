@@ -19,11 +19,13 @@ jobs:
       - id: changed
         run: echo "CHANGED=$(diff -bw currency_data.new.csv scripts/currency/currency_data.csv > /dev/null && echo true || echo false)" >> $GITHUB_OUTPUT
       - name: Set git config
+        if: ${{ steps.changed.outputs.CHANGED }}
         run: |
           git config --global user.name 'workflow'
           git config --global user.email 'eliastor@users.noreply.github.com'
       - name: "Modify csv file if currencies has been changed"
         id: commit
+        if: ${{ steps.changed.outputs.CHANGED }}
         run: |
           export "BRANCH=currency-update-$(date --iso-8601=date)-${{ github.run_number }}-${{ github.run_attempt }}"
           echo "BRANCH=${BRANCH}" >> $GITHUB_OUTPUT
