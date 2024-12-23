@@ -10,13 +10,13 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v4
-          with:
-            branch: main
+        with:
+          ref: main
 
       - run: python3-pip install yq
       - run: |
-        echo '["Name", "Code", "Num", "Scale"]' | jq -r '. | @csv' > currency_data.new.csv
-        curl -sSL https://www.six-group.com/dam/download/financial-information/data-center/iso-currrency/lists/list-one.xml | xq '.ISO_4217.CcyTbl.CcyNtry' | jq '(.. | select(has("Ccy")?)) | (if .CcyMnrUnts=="N.A." then .CcyMnrUnts="0" else . end) | (if .CcyNm | type=="object" then .CcyNm |= .["#text"] else .CcyNm |= . end)' | jq -r '[.CcyNm, .Ccy, .CcyNbr, .CcyMnrUnts] | @csv' >> currency_data.new.csv
+          echo '["Name", "Code", "Num", "Scale"]' | jq -r '. | @csv' > currency_data.new.csv
+          curl -sSL https://www.six-group.com/dam/download/financial-information/data-center/iso-currrency/lists/list-one.xml | xq '.ISO_4217.CcyTbl.CcyNtry' | jq '(.. | select(has("Ccy")?)) | (if .CcyMnrUnts=="N.A." then .CcyMnrUnts="0" else . end) | (if .CcyNm | type=="object" then .CcyNm |= .["#text"] else .CcyNm |= . end)' | jq -r '[.CcyNm, .Ccy, .CcyNbr, .CcyMnrUnts] | @csv' >> currency_data.new.csv
       - id: changed
         run: echo "CHANGED=$(diff -bw currency_data.new.csv scripts/currency/currency_data.csv && echo true || echo false" >> $GITHUB_OUTPUT
       - name: "Modify csv file if currencies has been changed"
