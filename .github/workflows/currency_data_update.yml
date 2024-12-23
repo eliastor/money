@@ -25,7 +25,7 @@ jobs:
       - name: "Modify csv file if currencies has been changed"
         id: commit
         run: |
-          export BRANCH="currency-update-$(date --iso-8601=date)-${{ github.run_number }}-${{ github.run_attempt }}
+          export "BRANCH=currency-update-$(date --iso-8601=date)-${{ github.run_number }}-${{ github.run_attempt }}"
           echo "BRANCH=${BRANCH}" >> $GITHUB_OUTPUT
           git checkout -b "${BRANCH}"
           mv currency_data.new.csv scripts/currency/currency_data.csv
