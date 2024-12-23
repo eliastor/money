@@ -12,7 +12,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
-      - run: python3-pip install yq
+      - run: pip install yq
       - run: |
           echo '["Name", "Code", "Num", "Scale"]' | jq -r '. | @csv' > currency_data.new.csv
           curl -sSL https://www.six-group.com/dam/download/financial-information/data-center/iso-currrency/lists/list-one.xml | xq '.ISO_4217.CcyTbl.CcyNtry' | jq '(.. | select(has("Ccy")?)) | (if .CcyMnrUnts=="N.A." then .CcyMnrUnts="0" else . end) | (if .CcyNm | type=="object" then .CcyNm |= .["#text"] else .CcyNm |= . end)' | jq -r '[.CcyNm, .Ccy, .CcyNbr, .CcyMnrUnts] | @csv' >> currency_data.new.csv
