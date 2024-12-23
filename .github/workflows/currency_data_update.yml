@@ -1,0 +1,45 @@
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 3 * * *"
+
+name: Fetch currencies CSV and create PR if changed
+jobs:
+  fetch-from-iso-six-group:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: pip install yq
+      - run: |
+          echo '["Name", "Code", "Num", "Scale"]' | jq -r '. | @csv' > currency_data.new.csv
+          curl -sSL https://www.six-group.com/dam/download/financial-information/data-center/iso-currrency/lists/list-one.xml | xq '.ISO_4217.CcyTbl.CcyNtry' | jq '(.. | select(has("Ccy")?)) | (if .CcyMnrUnts=="N.A." then .CcyMnrUnts="0" else . end) | (if .CcyNm | type=="object" then .CcyNm |= .["#text"] else .CcyNm |= . end)' | jq -s 'map(.)|unique_by(.Ccy)' | jq -r '.[] | [.CcyNm, .Ccy, .CcyNbr, .CcyMnrUnts] | @csv' >> currency_data.new.csv
+      - id: changed
+        run: echo "CHANGED=$(diff -bw currency_data.new.csv scripts/currency/currency_data.csv > /dev/null && echo true || echo false)" >> $GITHUB_OUTPUT
+      - name: Set git config
+        if: steps.changed.outputs.CHANGED
+        run: |
+          git config --global user.name 'workflow'
+          git config --global user.email 'eliastor@users.noreply.github.com'
+      - name: "Modify csv file if currencies has been changed"
+        id: commit
+        if: steps.changed.outputs.CHANGED
+        run: |
+          export "BRANCH=currency-update-$(date --iso-8601=date)-${{ github.run_number }}-${{ github.run_attempt }}"
+          echo "BRANCH=${BRANCH}" >> $GITHUB_OUTPUT
+          git checkout -b "${BRANCH}"
+          mv currency_data.new.csv scripts/currency/currency_data.csv
+          git add -u
+          git commit -m "update currencies list"
+          git push --set-upstream origin "${BRANCH}"
+      - name: "Create PR if currencies has been changed"
+        if: steps.changed.outputs.CHANGED
+        run: |
+          gh pr create -B main -H "${{ steps.commit.outputs.BRANCH }}" --title 'Merge "${{ steps.commit.outputs.BRANCH }}" into main' --body 'Created by Github action'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
