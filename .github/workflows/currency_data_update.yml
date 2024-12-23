@@ -3,7 +3,7 @@ on:
 name: Fetch currencies CSV and create PR if changed
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -31,6 +31,7 @@ jobs:
           mv currency_data.new.csv scripts/currency/currency_data.csv
           git add -u
           git commit -m "update currencies list"
+          git push
       - name: "Create PR if currencies has been changed"
         if: ${{ steps.changed.outputs.CHANGED }}
         run: |
